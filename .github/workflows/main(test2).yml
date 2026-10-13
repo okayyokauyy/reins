@@ -1,0 +1,30 @@
+name: Build iOS IPA
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Xcode version
+        run: sudo xcode-select -s /Applications/Xcode_15.4.app
+
+      - name: Build Application Project
+        run: |
+          xcodebuild -project Reins.xcodeproj -scheme Reins -configuration Release -sdk iphoneos clean archive -archivePath $PWD/build/Reins.xcarchive CODE_SIGNING_ALLOWED=NO
+
+      - name: Package Payload into IPA
+        run: |
+          mkdir -p Payload
+          cp -r build/Reins.xcarchive/Products/Applications/*.app Payload/
+          zip -r Reins.ipa Payload
+
+      - name: Upload Finished IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Reins-Unsigned-IPA
+          path: Reins.ipa
